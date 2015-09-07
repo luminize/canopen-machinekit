@@ -7,6 +7,11 @@ NMT_PREOP = 1
 NMT_OP = 2
 NMT_STOPPED = 3
 
+MSG_NMT_START_REMOTE = 0x1
+MSG_NMT_STOP_REMOTE  = 0x2
+MSG_NMT_PRE_OP       = 0x80
+MSG_NMT_RESET_NODE   = 0x81
+MSG_NMT_RESET_COM    = 0x82
 
 class CanopenDevice:
 
@@ -20,11 +25,16 @@ class CanopenDevice:
         parent_bus.add_device(node_id, self)  # nb object reference, not name
 
     def process(self, msg):
+        node_id = msg.arbitration_id & ~0x780
         print "device %d: msg %s" % (self.node_id, msg)
+
         if msg.arbitration_id & 0x700:
-            # a bootup message, switch to preop
-            self.state = NMT_PREOP
-            print "node %d state=preop" % (msg.arbitration_id & ~0x700)
+            # a bootup message, state is preop
+
+            # fire off a 'switch to operational' nmt cmd
+            self.state = NMT_OP
+            print "node %d switch to %d" % (node_id, self.state)
+            self.parent_bus.send_nmt( node_id, MSG_NMT_START_REMOTE) # switch to operational
 
     def timeout(self):
          print "device %d: timeout" % (self.node_id)

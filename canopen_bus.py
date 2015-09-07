@@ -20,9 +20,9 @@ class CanopenBus:
     def process(self, msg):
         # see https://python-can.readthedocs.org/en/latest/message.html
         print "process: %s node=%d dlc=%d %s" % (self.ifname,
-                                                 msg.arbitration_id,
+                                                 msg.arbitration_id & 0x007f,
                                                  msg.dlc, msg)
-        node_id = msg.arbitration_id & ~0x700 # 0x700 set on bootup
+        node_id = msg.arbitration_id & ~0x780 # 0x700 set on bootup
 
         if msg.arbitration_id & 0x700: # a bootup message
             if self.devices.has_key(node_id):
@@ -54,3 +54,10 @@ class CanopenBus:
     def __str__(self):
         s = "CanopenBus: name=%s fd=%d" % (self.ifname,self.fd())
         return s
+
+
+    def send_nmt(self, node_id, nmtcmd):
+        m = can.Message(arbitration_id=0,extended_id=False,
+                        dlc=2,data=bytearray([nmtcmd,node_id]))
+        self.bus.send(m)
+
