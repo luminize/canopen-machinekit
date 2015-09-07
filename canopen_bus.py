@@ -22,16 +22,24 @@ class CanopenBus:
         print "process: %s node=%d dlc=%d %s" % (self.ifname,
                                                  msg.arbitration_id,
                                                  msg.dlc, msg)
-        if self.devices.has_key(msg.arbitration_id):
-            # this device already exists
-            self.devices[msg.arbitration_id].process(msg)
-        else:
-            # assume it is a bootup message
-            print "no such device yet, creating:", msg.arbitration_id
-            d = CanopenDevice(msg.arbitration_id, self)
-            self.devices[msg.arbitration_id] = d
+        node_id = msg.arbitration_id & ~0x700 # 0x700 set on bootup
+
+        if msg.arbitration_id & 0x700: # a bootup message
+            if self.devices.has_key(node_id):
+                print "node %d rebooted" % (node_id)
+            else:
+                print "node %d booted, creating device" % node_id
+                d = CanopenDevice(node_id, self)
+                self.devices[node_id] = d
             # and call its message handler
-            self.devices[msg.arbitration_id].process(msg)
+            self.devices[node_id].process(msg)
+            return
+
+        # a non-bootup message
+        if self.devices.has_key(node_id):
+            # this device already exists
+            self.devices[node_id].process(msg)
+            return
 
     def timeout(self):
         for d in self.devices:
