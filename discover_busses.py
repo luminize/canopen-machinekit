@@ -1,26 +1,36 @@
-from canopen_bus import canopen_bus
-from canopen_device import canopen_device
+from canopen_bus import CanopenBus
+from canopen_device import CanopenDevice
 
-canopenbus0 = canopen_bus("fast-bus")
-canopenbus1 = canopen_bus("slow-bus")
+buses = []
+canopenbus0 = CanopenBus("fast-bus")
+canopenbus1 = CanopenBus("slow-bus")
+
+buses.append(canopenbus0)
+buses.append(canopenbus1)
 
 ''' canopenbus2 has 0 devices '''
-canopenbus2 = canopen_bus("empty-bus")
+canopenbus2 = CanopenBus("empty-bus")
+buses.append(canopenbus2)
 
-print "number of created busses %d" % canopen_bus.buscount
-print "first  bus name : ", canopenbus0.name
-print "second bus name : ", canopenbus1.name
-print "third  bus name : ", canopenbus2.name
+#print "number of created busses %d" % canopen_bus.buscount
+print "first  bus  : ", str(canopenbus0)
+print "second bus  : ", str(canopenbus1)
+print "third  bus  : ", str(canopenbus2)
 
-device1 = canopen_device("joint1","canopenbus0","ds402","maxon")
-device2 = canopen_device("joint2","canopenbus0","ds402","nanotec")
-device3 = canopen_device("joint3","canopenbus0","ds402","nanotec")
+device1 = CanopenDevice(2, canopenbus0)
+device2 = CanopenDevice(5, canopenbus0)
+device3 = CanopenDevice(8, canopenbus0)
+device4 = CanopenDevice(22,canopenbus1)
 
-device4 = canopen_device("device4","canopenbus1","ds402","maxon")
+print "number of buses:", len(buses)
 
-print "number of created devices : %d" % canopen_device.devicecount
+for b in buses:
+    print "bus %s: %d devices" % (b.name, b.num_devices())
+    for id in b.devices:
+        print "device %s" % str(b.devices[id])
 
-device1.displayinfo()
-device2.displayinfo()
-device3.displayinfo()
-device4.displayinfo()
+print str(device1)
+print str(device2)
+print str(device3)
+print str(device4)
+
