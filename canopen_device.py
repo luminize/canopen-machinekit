@@ -10,6 +10,12 @@ class CanopenDevice:
         self.name = name = None  # set those later once discovery works
         parent_bus.add_device(node_id, self)  # nb object reference, not name
 
+    def process(self, msg):
+        print "device %d: msg %s" % (self.node_id, msg)
+
+    def timeout(self):
+         print "device %d: timeout" % (self.node_id)
+
     # string representation of an object:
     def __str__(self):
         s = "CanopenDevice "
@@ -19,3 +25,5 @@ class CanopenDevice:
         s += "device type=%s " % self.device_type
         s += "manufacturer=%s "% self.manufacturer
         return s
+
+    
