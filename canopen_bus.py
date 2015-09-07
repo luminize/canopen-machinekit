@@ -1,19 +1,20 @@
 ''' canopen bus class '''
 
-class canopen_bus:
-    buscount = 0
-    devices = []
-    ''' devices.append() will add a new device to this list '''
+class CanopenBus:
 
     def __init__(self, name):
         self.name = name
-        canopen_bus.buscount += 1
+        self.devices = dict() # node-id -> device object dict
 
-    def add_device(self,devicename):
-        self.devices.append(devicename)
-
-    def displaycount(self):
-        print "number of busses: %d" % canopen_bus.buscount
+    def add_device(self,node_id, device):
+        self.devices[node_id] = device
 
     def displayname(self):
         print "name: ", self.name
+
+    def num_devices(self):
+        return len(self.devices.keys())
+
+    def __str__(self):
+        s = "CanopenBus: name=%s " % self.name
+        return s
