@@ -1,4 +1,8 @@
+
 import select
+import sys
+
+
 # see http://bioportal.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/select/index.html#poll
 
 from canopen_bus import CanopenBus
@@ -36,6 +40,16 @@ for fd in buses:
 # Do not block forever ()
 TIMEOUT = 1000 # milliseconds
 
+try:
+    import manhole
+    manhole.install(locals={
+        'buses' : buses,  # these objects will be visible in manhole-cli
+        'can0' : can0,
+        'vcan0' : vcan0,
+    })
+except Exception:
+    print "manhole not installed - run 'sudo pip install manhole'"
+
 while True:
     # watches all fd's in poller set
     events = poller.poll(TIMEOUT)
@@ -45,7 +59,7 @@ while True:
                 canbus = buses[fd]    # map fd->CanopenBus object
                 m = canbus.bus.recv() # call its Bus.recv method
                 canbus.process(m)     # call the message handler
-                                      # in that CanopenBus object
+                                          # in that CanopenBus object
     else:
         # nothing received
         for fd in buses:

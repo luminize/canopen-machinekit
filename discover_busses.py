@@ -33,4 +33,3 @@ print str(device1)
 print str(device2)
 print str(device3)
 print str(device4)
-

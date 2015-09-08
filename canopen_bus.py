@@ -20,7 +20,7 @@ class CanopenBus:
     def process(self, msg):
         # see https://python-can.readthedocs.org/en/latest/message.html
         print "process: %s node=%d dlc=%d %s" % (self.ifname,
-                                                 msg.arbitration_id,
+                                                 msg.arbitration_id & 0x007f,
                                                  msg.dlc, msg)
         # a list of COB ID's shamelessly taken from
         # https://github.com/CANopenNode/CANopenNode/blob/b7166438453beeab84b0e1cf569fa329cb69dd3a/CANopen.h#L67-L91
@@ -52,6 +52,7 @@ class CanopenBus:
                             NMT error control, heartbeat and node guarding
         }CO_Default_CAN_ID_t;
         '''
+        node_id = msg.arbitration_id & ~0x780 # 0x700 set on bootup
 
         if msg.arbitration_id & 0x700: # a NMT error control message
             node_id = msg.arbitration_id & ~0x700 # 0x700 with node nr on bootup
@@ -91,3 +92,8 @@ class CanopenBus:
     def __str__(self):
         s = "CanopenBus: name=%s fd=%d" % (self.ifname,self.fd())
         return s
+
+    def send_nmt(self, node_id, nmtcmd):
+        m = can.Message(arbitration_id=0,extended_id=False,
+                        dlc=2,data=bytearray([nmtcmd,node_id]))
+        self.bus.send(m)
