@@ -24,21 +24,21 @@ class CanopenDevice:
         self.name = name = None  # set those later once discovery works
         self.last_timestamp = None # last known timestamp
         parent_bus.add_device(node_id, self)  # nb object reference, not name
-        print "init node %d on bus %s" % ((self.node_id), self.parent_bus.ifname)
+        #print "init node %d on bus %s" % ((self.node_id), self.parent_bus.ifname)
 
     def process(self, msg):
         #print "device %d: msg %s" % (self.node_id, msg)
         self.last_timestamp = msg.timestamp
-        print "device %d last known timestamp %f:" % (self.node_id, \
-                                                       self.last_timestamp)
+        #print "device %d last known timestamp %f:" % (self.node_id, \
+        #                                               self.last_timestamp)
         node_id = msg.arbitration_id & ~0x780
-        print "device %d: msg %s" % (self.node_id, msg)
+        #print "device %d: msg %s" % (self.node_id, msg)
         if msg.arbitration_id & 0x700:
             # a bootup message, state is preop
 
             # fire off a 'switch to operational' nmt cmd
             self.state = NMT_OP
-            print "node %d switch to %d" % (node_id, self.state)
+            #print "node %d switch to %d" % (node_id, self.state)
             self.parent_bus.send_nmt( node_id, MSG_NMT_START_REMOTE) # switch to operational
 
     def timeout(self):
