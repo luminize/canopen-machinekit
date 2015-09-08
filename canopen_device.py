@@ -37,14 +37,15 @@ class CanopenDevice:
             self.parent_bus.send_nmt( node_id, MSG_NMT_START_REMOTE) # switch to operational
 
     def timeout(self):
-         print "device %d: timeout" % (self.node_id)
+        pass
+        #print "device %d: timeout" % (self.node_id)
 
     # string representation of an object:
     def __str__(self):
         s = "CanopenDevice "
         s += "node_id=%d " % self.node_id
         s += "name=%s " % self.name
-        s += "parent=%s " % self.parent_bus.name
+        s += "parent=%s " % self.parent_bus.ifname
         s += "device type=%s " % self.device_type
         s += "manufacturer=%s "% self.manufacturer
         return s
