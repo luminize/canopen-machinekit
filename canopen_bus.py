@@ -63,6 +63,7 @@ class CanopenBus:
                 #print "node %d first time heartbeat, creating device" % node_id
                 d = CanopenDevice(node_id, self)
                 self.devices[node_id] = d
+
             # and call its message handler
             self.devices[node_id].process(msg)
             return
@@ -77,6 +78,15 @@ class CanopenBus:
         # a message which has not been identified yet
         if self.devices.has_key(node_id):
             # this device already exists
+            self.devices[node_id].process(msg)
+            return
+
+        # to add a non-CANOpen device:
+        if False: # replace by condition as needed
+            d = CanDevice(node_id, self)
+            self.devices[node_id] = d
+
+            # and call its message handler
             self.devices[node_id].process(msg)
             return
 
