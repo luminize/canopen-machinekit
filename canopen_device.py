@@ -1,4 +1,5 @@
 ''' canopen device class '''
+from candevice import CanDevice
 
 # NMT states
 # http://www.a-m-c.com/download/sw/dw300_3-0-3/CAN_Manual300_3-0-3.pdf p15 4.1
@@ -7,31 +8,27 @@ NMT_PREOP   = 0x7f
 NMT_OP      = 0x05
 NMT_STOPPED = 0x04
 
+nmt_states = {
+    NMT_BOOTUP: 'BOOTUP',
+    NMT_PREOP : 'PRE-OPERATIONAL',
+    NMT_OP : 'OPERATIONAL',
+    NMT_STOPPED : 'STOPPED'
+}
+
 MSG_NMT_START_REMOTE = 0x01
 MSG_NMT_STOP_REMOTE  = 0x02
 MSG_NMT_PRE_OP       = 0x80
 MSG_NMT_RESET_NODE   = 0x81
 MSG_NMT_RESET_COM    = 0x82
 
-class CanopenDevice:
+class CanopenDevice(CanDevice):
 
     def __init__(self, node_id, parent_bus):
-        self.node_id = node_id
-        # fill states dictionary
-        self.states = dict()
-        self.states[NMT_BOOTUP] = 'BOOTUP'
-        self.states[NMT_PREOP] = 'PRE-OPERATIONAL'
-        self.states[NMT_PREOP] = 'PRE-OPERATIONAL'
-        self.states[NMT_OP] = 'OPERATIONAL'
-        self.states[NMT_STOPPED] = 'STOPPED'
-        self.state = None # at startup unknown, determine from heartbeat
-        self.parent_bus = parent_bus
+        super(CanopenDevice, self).__init__(node_id, parent_bus)
+        self.nmt_state = None # at startup unknown, determine from heartbeat
         self.device_type = None  # at first discovery time not yet known
         self.manufacturer = None # so not a sensible creation-time param
         self.name = name = None  # set those later once discovery works
-        self.last_timestamp = None # last known timestamp
-        parent_bus.add_device(node_id, self)  # nb object reference, not name
-        #print "init node %d on bus %s" % ((self.node_id), self.parent_bus.ifname)
 
     def process(self, msg):
         #print "device %d: msg %s" % (self.node_id, msg)
@@ -72,8 +69,7 @@ class CanopenDevice:
     def __str__(self):
         s = "CanopenDevice "
         s += "node_id=%d " % self.node_id
-        s += "state=%d " % self.state
-        s += "states=%d " % self.states
+        s += "state=%s " % nmt_states[self.state]
         s += "name=%s " % self.name
         s += "parent=%s " % self.parent_bus.ifname
         s += "device type=%s " % self.device_type
