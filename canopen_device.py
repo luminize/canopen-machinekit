@@ -74,7 +74,7 @@ class CanopenDevice(CanDevice):
             # a heartbeat message, mirror the state of the hardware
             # check that there is only 1 byte
             if msg.dlc == 1 :
-                print "heartbeat with %d byte" % msg.dlc
+                #print "heartbeat with %d byte" % msg.dlc
                 msg_data = msg.data[0]
                 #print "msg_data: %.8x" % msg_data
                 if msg_data == NMT_BOOTUP:

@@ -24,9 +24,10 @@ class CanopenBus:
         #                                         msg.dlc, msg)
 
         # determine node_id
-        node_id = msg.arbitration_id & ~0x780 # 0x700 + node is + state set on bootup of device
-        if msg.arbitration_id & 0x700: # a NMT error control message
-            node_id = msg.arbitration_id & ~0x700 # 0x700 with node nr on bootup
+        node_id = msg.arbitration_id & 0x7f # 0x700 + node is + state set on bootup of device
+        if ((msg.arbitration_id & ~node_id) == 0x700): # a NMT error control message
+#            node_id = msg.arbitration_id & ~0x700 # 0x700 with node nr on bootup
+            print "message 0x700: NMT error control message"
             if self.devices.has_key(node_id):
                 #print "node %d heartbeat message heard" % (node_id)
                 pass
@@ -38,27 +39,28 @@ class CanopenBus:
             # and call its message handler
             self.devices[node_id].process(msg)
             return
-
-        if msg.arbitration_id & 0x000: # NMT service message
-            pass
-            #print "message: NMT service"
-        if msg.arbitration_id & 0x080: # Emergency message
-            node_id = msg.arbitration_id & ~0x080
-            print "message: Emergency on node %d" % node_id
-
-        # a message which has not been identified yet
-        if self.devices.has_key(node_id):
-            # this device already exists
-            self.devices[node_id].process(msg)
+        if ((msg.arbitration_id & ~node_id) == 0x000): # NMT service message
+            print "message 0x000: NMT service"
             return
-
-        # to add a non-CANOpen device:
-        if False: # replace by condition as needed
-            d = CanDevice(node_id, self)
-            self.devices[node_id] = d
-
-            # and call its message handler
-            self.devices[node_id].process(msg)
+        if ((msg.arbitration_id & ~node_id) == 0x080): # Emergency message
+            #node_id = msg.arbitration_id & ~0x080
+            print "message 0x080: Emergency on node %d" % node_id
+            return
+        if ((msg.arbitration_id & ~node_id) == 0x180): # TPDO1
+            #node_id = msg.arbitration_id & ~0x180
+            print "message 0x180: TPDO1 on node %d" % node_id
+            return
+        if ((msg.arbitration_id & ~node_id) == 0x280): # TPDO2
+            #node_id = msg.arbitration_id & ~0x280
+            print "message 0x280: TPDO2 on node %d" % node_id
+            return
+        if ((msg.arbitration_id & ~node_id) == 0x380): # TPDO3
+            #node_id = msg.arbitration_id & ~0x380
+            print "message 0x380: TPDO3 on node %d" % node_id
+            return
+        if ((msg.arbitration_id & ~node_id) == 0x480): # TPDO4
+            #node_id = msg.arbitration_id & ~0x480
+            print "message 0x480: TPDO4 on node %d" % node_id
             return
 
     def timeout(self):
