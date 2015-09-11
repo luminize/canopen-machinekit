@@ -20,7 +20,7 @@ class CanopenBus:
     def process(self, msg):
         # see https://python-can.readthedocs.org/en/latest/message.html
         #print "process: %s node=%d dlc=%d %s" % (self.ifname,
-        #                                         msg.arbitration_id & 0x007f,
+        #                                         msg.arbitration_id & 0x07f,
         #                                         msg.dlc, msg)
         # a list of COB ID's shamelessly taken from
         # https://github.com/CANopenNode/CANopenNode/blob/b7166438453beeab84b0e1cf569fa329cb69dd3a/CANopen.h#L67-L91
@@ -52,13 +52,13 @@ class CanopenBus:
                             NMT error control, heartbeat and node guarding
         }CO_Default_CAN_ID_t;
         '''
-        node_id = msg.arbitration_id & ~0x780 # 0x700 set on bootup
-
+        # determine node_id
+        node_id = msg.arbitration_id & ~0x780 # 0x700 + node is + state set on bootup of device
         if msg.arbitration_id & 0x700: # a NMT error control message
             node_id = msg.arbitration_id & ~0x700 # 0x700 with node nr on bootup
             if self.devices.has_key(node_id):
-                pass
                 #print "node %d heartbeat message heard" % (node_id)
+                pass
             else:
                 #print "node %d first time heartbeat, creating device" % node_id
                 d = CanopenDevice(node_id, self)
@@ -70,10 +70,9 @@ class CanopenBus:
         if msg.arbitration_id & 0x000: # NMT service message
             pass
             #print "message: NMT service"
-
         if msg.arbitration_id & 0x080: # Emergency message
             node_id = msg.arbitration_id & ~0x080
-            #print "message: Emergency on node %d" % node_id
+            print "message: Emergency on node %d" % node_id
 
         # a message which has not been identified yet
         if self.devices.has_key(node_id):
