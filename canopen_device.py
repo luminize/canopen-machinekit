@@ -21,6 +21,28 @@ MSG_NMT_PRE_OP       = 0x80
 MSG_NMT_RESET_NODE   = 0x81
 MSG_NMT_RESET_COM    = 0x82
 
+# COB id's in this device
+TPDO_1 = 0x180
+TPDO_2 = 0x280
+TPDO_3 = 0x380
+TPDO_4 = 0x480
+
+# where are the TPDO parameters located in the device? should be set-up
+# by the integrator because this can differ per device and setup.
+# for now hard-coded, but should be done via an xml file (EDS file) which is
+# device specific. Over all this is ready for improvement.
+tpdo_mapping_registers = {
+    TPDO_1: 0x1A00,
+    TPDO_2: 0x1A01,
+    TPDO_3: 0x1A02,
+    TPDO_4: 0x1A03
+}
+
+RPDO_1 = 0x200
+RPDO_2 = 0x300
+RPDO_3 = 0x400
+RPDO_4 = 0x500
+
 # a list of COB ID's shamelessly taken from
 # https://github.com/CANopenNode/CANopenNode/blob/b7166438453beeab84b0e1cf569fa329cb69dd3a/CANopen.h#L67-L91
 '''
@@ -87,12 +109,72 @@ class CanopenDevice(CanDevice):
                     self.state = NMT_STOPPED
             else:
                 print "heartbeat with %d bytes, while expectin 1 byte" % msg.dlc
-            '''
-            # fire off a 'switch to operational' nmt cmd
-            self.state = NMT_OP
-            #print "node %d switch to %d" % (node_id, self.state)
-            self.parent_bus.send_nmt( node_id, MSG_NMT_START_REMOTE) # switch to operational
-            '''
+
+    def readPDOsetup(self):
+        # OD means Object Dictionary
+        # SDO means Service Data Object
+        # TPDO means Transmit Process Data Object
+        # RPDO meand Receive Process Data Object
+        #
+        #
+        # only do for TPDO1 for now, expand for later
+        # this method will ask which registers are mapped to the specific PDO
+        #
+        # in the OD the Index area from 1400h to 15FFh is for RPDO communication
+        # parameters. The first RPDO is at 1400h, the second at 1401h, the third
+        # at 1402h and so on.
+        #
+        # in the OD the Index area from 1800h to 19FFh is for TPDO communication
+        # parameters. The first TPDO is at 1800h, the second at 1801h, the third
+        # at 1802h and so on.
+        #
+        # PDO COMMUNICATION parameters:
+        # each PDO has subindexes for example 1800h subindex 0
+        # which will tell:
+        # subindex 0: u8 , nr of entries (the parameters, max 5, 0-2 mandatory)
+        # subindex 1: u32, COB_id (the COB to send/listen to, like 180h + node_id)
+        # subindex 2: u8 , transmission type, the trigger behaviour
+        # subindex 3: u16, inhibit time, the minimum time in which not to send
+        #                  not used in an RPDO
+        # subindex 4: u8 , reserved, legacy value, do not use
+        # subindex 5: u16, event time, when time driven sending (see subindex 2)
+        #                  RPDO can generate an error if this timer expires
+        #
+        # PDO MAPPING parameters:
+        # in the OD the Index area from 1600h to 17FFh is for RPDO mapping
+        # in the OD the Index area from 1A00h to 1BFFh is for TPDO mapping
+        #
+        # There can be no more than 64 bits in the PDO, this means that there
+        # are max 64 1-bit mappings
+        # subindex 0: which is max 64 of 1 bit values.
+        # subindex 1: which is the register where it points to, plus the
+        #             subindex of that register PLUS the size of that subindex
+        #
+        # EXAMPLE:
+        # TPDO1, index 1A00h subindex 0 is 2
+        #                    subindex 1: 2010 01 08 (OD 2010, sub1, 8  bit)
+        #                    subindex 2: 2010 02 10 (OD 2010, sub2, 16 bit)
+        # this will then result in a 3 byte message which has to be decoded
+        # by a master, or a directly linked RPDO of another node.
+        # For example:
+        # node5 is set up so that an TPDO1 of node 5 will send the COB_id 185h
+        # node8 is set up that RPDO1 listens directly to a COB_id 185 by setting
+        # RPDO1, subindex 1 to 185h and "decodes" this information into the
+        # OD registers that have been set-up
+
+        # reading the above parameters will be done with SDO's
+        # focus on the TPDO1 for now:
+        # master sends SDO read request -> node
+        # node replies with SDO response and the data
+
+        # KISS by requesting the MAPPING parameters only for now
+        self.sendSDO(tpdo_mapping_registers[TPDO_1], 0)
+
+
+    def sendSDO(self, register, sub):
+        self.parent_bus.send_sdo(self.node_id, register, sub)
+        pass
+
     def timeout(self):
         pass
         #print "device %d: timeout" % (self.node_id)

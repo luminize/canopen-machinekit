@@ -62,6 +62,17 @@ class CanopenBus:
             #node_id = msg.arbitration_id & ~0x480
             print "message 0x480: TPDO4 on node %d" % node_id
             return
+        if ((msg.arbitration_id & ~node_id) == 0x580): # TSDO
+            print "message 0x580: SDO response from server (node) %d" % node_id
+            return
+        if ((msg.arbitration_id & ~node_id) == 0x600): # RSDO
+            print "message 0x600: SDO request from clien (master) %d" % node_id
+            return
+
+    def readPDOsetup(self,node_id):
+        # trigger the node_id device to traverse all PDO's
+        # meaning TPDO 1 to 4 and RPDO 1 to 4
+        self.devices[node_id].readPDOsetup()
 
     def timeout(self):
         for d in self.devices:
@@ -80,4 +91,20 @@ class CanopenBus:
     def send_nmt(self, node_id, nmtcmd):
         m = can.Message(arbitration_id=0,extended_id=False,
                         dlc=2,data=bytearray([nmtcmd,node_id]))
+        self.bus.send(m)
+
+    def send_sdo(self, node_id, register, sub):
+        #doesnt work, need to convert register to bytearray yet
+        #hardcoded for now
+        # https://en.wikipedia.org/wiki/CANopen#Service_Data_Object_.28SDO.29_protocol
+
+        m = can.Message(arbitration_id=(0x600+node_id) ,extended_id=False,
+                        dlc=2,data=bytearray([0x40, \
+                                              0x00, \
+                                              0x1A, \
+                                              0x00, \
+                                              0x00, \
+                                              0x00, \
+                                              0x00, \
+                                              0x00 ]))
         self.bus.send(m)
