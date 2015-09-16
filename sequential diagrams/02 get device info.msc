@@ -5,10 +5,11 @@ msc {
 
     a -> e [label = "open XML file"];
     e => a [label = "file opened"];
-    a -> a [label = "make list of registers\nto download from node"];
+    a => a [label = "make list of registers\nto download from node"];
     a box a [label = "start getting device information"];
     a -> c [label = "get device info SDO 600#..."];
-    c => a [label = "return info via SDO 585#..."];
-    a -> d [label = "add HAL OUTPUT pin"];
-    a -> a [label = "do this numerous times"];
+    c -> a [label = "return info via SDO 585#..."];
+    a => d [label = "add HAL OUTPUT pin"];
+    d >> a [label = "HAL output pin added"];
+    a => a [label = "do this numerous times"];
 }
