@@ -1,0 +1,20 @@
+msc {
+    arcgradient = 5;
+
+    a [label = "busmaster"], d [label = "HAL"], b [label = "some node"];
+    
+    # send broadcast message reset all nodes to get first boot-up message
+    a box a [label = "startup discovery"];
+    a box a [label = "get devices info"];
+    a box a [label = "initiate \"some node\""];
+    a box a [label = "iterate and setup each CAN device"];
+    a box a [label = "iterate and get into operation mode"];
+    a box a [label = "operational status"];
+    a box a [label = "link PDO messages with HAL pins"];
+    d -> a [label = "HAL error"];
+    a box a [label = "act on HAL error"];
+    b -> a [label = "NODE error"];
+    a box a [label = "act on NODE error"];
+    d -> a [label = "HAL shutdown"];
+    a box a [label = "power off devices"];
+}

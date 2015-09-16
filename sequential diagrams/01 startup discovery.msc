@@ -1,0 +1,17 @@
+msc {
+    arcgradient = 5;
+
+    a [label = "busmaster"], b [label = "node_2"], c [label = "node_5"], d [label = "HAL"];
+    
+    # send broadcast message reset all nodes to get first boot-up message
+    a ->* [label = "000#00 80"];
+
+    a <- c [label = "705#00"];
+    a => d [label = "initiate device 5"];
+    a <- b [label = "702#00"];
+	a => d [label = "initiate device 2"];
+	d >> a [label = "component 5 initiated"];
+    a -> a [label = "add device 5 to list"];
+	d >> a [label = "component 2 initiated"];
+    a -> a [label = "add device 2 to list"];
+}

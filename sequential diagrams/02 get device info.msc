@@ -1,0 +1,10 @@
+msc {
+    arcgradient = 5;
+
+    a [label = "busmaster"], c [label = "node_5"], d [label = "HAL component"], e [label = "XML settings file"];
+
+    a -> c [label = "get device info SDO 600#..."];
+    c => a [label = "return info via SDO 585#..."];
+    a -> d [label = "add HAL pins "];
+    a -> a [label = "do this numerous times"];
+}
