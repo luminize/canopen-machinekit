@@ -1,0 +1,11 @@
+msc {
+    arcgradient = 5;
+
+    a [label = "CAN bus component"], b [label = "Hardware"], s [label = "Extern"];
+
+    a box a [label = "unknown buses"];
+    s -> a [label = "start discovery"];
+    a -> b [label = "check for bused of ? type(s)"];
+    b -> a [label = "buses exist"];
+    a box a [label = "buses discovered"];
+}

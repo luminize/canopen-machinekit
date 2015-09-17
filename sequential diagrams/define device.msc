@@ -1,0 +1,17 @@
+msc {
+    arcgradient = 5;
+
+    //a [label = "CAN bus component"], 
+    b [label = "mirrored device {n}"], c [label = "device {n}"], e [label = "Extern"];
+    
+    b box b [label = "device discovered"];
+    e -> b [label = "define discovered device"];
+    b -> c [label = "request info on type"];
+    c -> b [label = "type = ..."];
+    b -> c [label = "request info on manufacturer"];
+    c -> b [label = "manufacturer = ..."];
+    b -> c [label = "request info on profile"];
+    c -> b [label = "profile = ..."];
+    e -> b [label = "timeout / no errors"];
+    b box b [label = "device defined"];
+}

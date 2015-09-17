@@ -1,0 +1,55 @@
+==== HAL driver for CAN specs
+
+This document describes the flow of the change of state for various entities.
+The source of the diagrams are available in `.msg` format which can be parsed
+with link:http://www.mcternan.me.uk/mscgen/[with the program MSCgen] to
+generate sequential charts.
+
+To keep things simple we try to keep the vertical bars (which are the entities,
+or Functions if you will) to a minimum. And try to
+follow the PEP mantra: 
+
+[NOTE]
+====
+"Precondition, Events, Post condition"
+====
+
+=== Discover buses
+
+When Machinekit starts, its unknown if and how many devices are on how many
+CAN buses.
+
+- precondition: unknown amount of CAN buses
+- endcondition: known amount of CAN buses
+
+image:discover buses.png[]
+
+== Knowing devices
+
+=== Discovering devices
+
+When a/multiple bus(es) exist then we need to figure out which devices are
+on the bus. That needs to be done with a signal (Canopen NMT reset node message,
+for normal CAN probably by polling. Unknown at this time). We will focus on
+CANopen.
+
+- precondition: known CAN bus
+- precondition: unknown device
+- endcondition: discovered device
+
+image:discover devices.png[]
+
+=== Defining devices
+
+after knowing about the availability of devices, we need to define the "software
+mirror" of our hardware device by knowing at least some information for making
+further decisions on how to proceed:
+- type
+- manufacturer
+- profile
+- ?
+
+- precondition: discovered device
+- endcondition: defined device
+
+image:define device.png[]

@@ -1,0 +1,14 @@
+msc {
+    arcgradient = 5;
+
+    a [label = "CAN bus component"], b [label = "device {n}"], e [label = "Extern"];
+    
+    # send broadcast message reset all nodes to get first boot-up message
+    a box a [label = "0 known devices"];
+    a -> b [label = "000#00 80"];
+
+    a <- b [label = "70{n}#00"];
+    //a -> a [label = "add device 2 to list"];
+    e -> a [label = "timeout"];
+    a box a [label = "[{n} discovered device"];
+}
