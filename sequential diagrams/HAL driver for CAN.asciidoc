@@ -14,7 +14,7 @@ follow the PEP mantra:
 "Precondition, Events, Post condition"
 ====
 
-=== Discover buses
+== Discover buses
 
 When Machinekit starts, its unknown if and how many devices are on how many
 CAN buses.
@@ -24,9 +24,11 @@ CAN buses.
 
 image:discover buses.png[]
 
-== Knowing devices
+= Device properties
 
-=== Discovering devices
+== Discover devices
+
+=== discover at startup
 
 When a/multiple bus(es) exist then we need to figure out which devices are
 on the bus. That needs to be done with a signal (Canopen NMT reset node message,
@@ -37,13 +39,26 @@ CANopen.
 - precondition: unknown device
 - endcondition: discovered device
 
-image:discover devices.png[]
+image:discover devices at startup.png[]
 
-=== Defining devices
+=== monitor device startup
 
-after knowing about the availability of devices, we need to define the "software
-mirror" of our hardware device by knowing at least some information for making
-further decisions on how to proceed:
+When a device gets connected it sends on bootup a NMT message. This message can
+be caught and acted upon.
+
+- precondition: known CAN bus
+- precondition: unknown device
+- endcondition: discovered device
+
+image:discover devices monitor.png[]
+
+== Setting up
+
+=== Defining properties
+
+after knowing about the availability of devices, we need to define the device
+properties of our hardware device by knowing at least some information for
+makingfurther decisions on how to proceed:
 - type
 - manufacturer
 - profile

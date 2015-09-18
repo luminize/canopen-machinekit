@@ -5,7 +5,7 @@ msc {
     b [label = "mirrored device {n}"], c [label = "device {n}"], e [label = "Extern"];
     
     b box b [label = "device discovered"];
-    e -> b [label = "define discovered device"];
+    e -> b [label = "get device properties"];
     b -> c [label = "request info on type"];
     c -> b [label = "type = ..."];
     b -> c [label = "request info on manufacturer"];
