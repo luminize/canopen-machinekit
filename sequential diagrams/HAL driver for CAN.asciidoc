@@ -15,12 +15,30 @@ follow the PEP mantra:
 "Precondition, Events, Post condition"
 ====
 
-index
+=== [[index]]index
 
-. <<test,bla bla>>
+. <<discover-buses,Discover buses>>
+. <<device-properties,Device properties>>
+.. <<discover-devices,Discover devices>>
+... <<discover-startup,discover devices at startup>>
+... <<monitor-device-startup,monitor device startup>>
+.. <<device-set-up,Setting up>>
+... <<reading-properties,Reading properties>>
+... <<defining-registers,Defining registers>>
+.... <<pdo-mapping,PDO mapping>>
+..... <<message-tpdo,TPDO messages>>
+..... <<message-rpdo,RPDO messages>>
+. <<changing-states,Changing states of devices>>
+. <<communication,Communication between device and HAL>>
 
+= [[vocabulary]]Vocabulary
 
-= Discover buses
+OD means Object Dictionary
+SDO means Service Data Object
+TPDO means Transmit Process Data Object
+RPDO meand Receive Process Data Object
+
+= [[discover-buses]]Discover buses
 
 When Machinekit starts, its unknown if and how many devices are on how many
 CAN buses.
@@ -30,11 +48,13 @@ CAN buses.
 
 image:discover buses.png[]
 
-= Device properties
+<<index,index>>
 
-== Discover devices
+= [[device-properties]]Device properties
 
-=== discover at startup
+== [[discover-devices]]Discover devices
+
+=== [[discover-startup]]discover devices at startup
 
 When a/multiple bus(es) exist then we need to figure out which devices are
 on the bus. That needs to be done with a signal (Canopen NMT reset node message,
@@ -47,7 +67,7 @@ CANopen.
 
 image:discover devices at startup.png[]
 
-=== monitor device startup
+=== [[monitor-device-startup]]monitor device startup
 
 When a device gets connected it sends on bootup a NMT message. This message can
 be caught and acted upon.
@@ -58,9 +78,9 @@ be caught and acted upon.
 
 image:discover devices monitor.png[]
 
-== [[test]]Setting up
+== [[device-set-up]]Setting up
 
-=== Defining properties
+=== [[reading-properties]]Reading properties
 
 after knowing about the availability of devices, we need to define the device
 properties of our hardware device by knowing at least some information for
@@ -75,17 +95,114 @@ makingfurther decisions on how to proceed:
 
 image:define device.png[]
 
-=== Defining registers
+=== [[defining-registers]]Defining registers
 
-==== TPDO's
+==== [[pdo-mapping]]PDO mapping
 
-==== RPDO's
+PDO's are sent and received by the device. Unlike SDO's the PDO's can contain
+various (combined) registers. This will make the overall bandwidth of this
+communication less.
+
+[cols="3*", options="header"]
+|===
+3+^|PDO relevant registers:
+
+.2+.^|Communication parameter
+|RPDO | 1400h - 15FFh
+|TPDO | 1800h - 19FFh
+
+.2+.^|Mapping parameter
+|RPDO | 1600h - 17FFh
+|TPDO | 1A00h - 1BFFh
+
+|===
+
+Each PDO will have subindexes at which the speciic parameters for communication
+are set. This will be the "behaviour" of the PDO.
+
+[cols="15,15,15,55", options="header"]
+|===
+4+^|(R/T)PDO COMMUNICATION parameters:
+
+|*SUBINDEX* | *SIZE* | *VALUE* | *DESCRIPTION*
+
+|0 | u8  | 0-2 min, 5 max | nr of entries (the parameters)
+|1 | u32 | COB_id | (the COB to send/listen to, like 180h + node_id for RPDO1
+
+|2 3+| *TRANSMISSION TYPE DEPENDING ON CHOSEN HARDWARE !!! READ YOUR MANUAL*
+
+.3+.^|
+.3+.^|u8 
+|(0 or 1)        | SYNCHRONOUS: send after next sync IF the value has changed
+|(1 or 0) to 254 | SYNCHRONOUS: sending of the object after the set number 
+                   of `SYNC` objects, independently of whether the object has
+                   changed
+| 255            | A-SYNCHRONOUS: sending the object after a change, independent 
+                   of the `SYNC` object.
+
+|3 | u16 | - | inhibit time, the minimum time in which not to send
+           (not used in an RPDO)
+|4 | u8  | - | reserved, legacy value, do not use
+|5 | u16 | - | event time, when time driven sending (see subindex 2)
+           RPDO can generate an error if this timer expires
+
+|===
+
+A PDO message can transmit more than 1 register value. That means the receiving
+side must know to what registers and subindexes the values correspond. The content
+of a PDO message is set by mapping OD entries to the indexes 1 to n. The 
+first subindex (0) will carry information about the amount of mapped OD registers.
+
+The subindexes from 1 and following will carry the adressm subindex, as well as
+the type of data.
+
+There can be no more than 64 bits in the PDO, this means that there
+are max 64 1-bit mappings
+subindex 0: which is max 64 (of 1 bit values).
+subindex 1: which is the register where it points to, plus the
+            subindex of that register PLUS the size of that subindex
+
+EXAMPLE of node 5:
+
+[cols="15,15,15,55", options="header"]
+|===
+4+^|TPDO 3 setup:
+
+|*INDEX* | *SUBINDEX* | *VALUE* | *DESCRIPTION*
+4+| *communication parameters*
+|1802h | 0 | 2   | nr of entries
+|1802h | 1 | 385 | `COB-id` to listen to
+|1802h | 2 | 0   | trigger type (SYNC) synchronous (depends on hardware)
+|1802h | 3 | -   | inhibit time
+|1802h | 4 | -   | reserved, legacy value, do not use
+|1802h | 5 | -   | event time
+4+| mapping parameters
+|1A02h | 0 | 2   | 2 mapped value
+|1A02h | 1 | 6064 00 20   | OD 6064, sub 0, position actual value, u32
+|1A02h | 2 | 6041 00 06   | OD 6041, sub 0, DS402 status word, u16
+
+|===
+
+When the above configured TPDO3 message is sent you should see a message with
+COB-id = 385 with the 2 values in the message. Knowing the above setup is 
+vital for correctly interpreting sent messages.
+
+
+===== [[message-tpdo]]TPDO messages
+
+sequence diagram of setting up TPDO to be added
+
+===== [[message-rpdo]]RPDO messages
+
+sequence diagram of setting up RPDO to be added
 
 ==== SYNC
 
 ==== Heartbeat
 
-= Changing states of devices
+<<index,index>>
+
+= [[changing-states]]Changing states of devices
 
 == NMT states
 
@@ -99,7 +216,9 @@ image:define device.png[]
 
 === Velocity
 
-= Communication between device and HAL
+<<index,index>>
+
+= [[communication]]Communication between device and HAL
 
 == from HAL pin to device
 
