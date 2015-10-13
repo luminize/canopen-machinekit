@@ -1,5 +1,6 @@
 ''' canopen bus class '''
-
+import struct
+from binascii import hexlify
 from canopen_device import CanopenDevice
 
 import can
@@ -49,6 +50,12 @@ class CanopenBus:
         if ((msg.arbitration_id & ~node_id) == 0x180): # TPDO1
             #node_id = msg.arbitration_id & ~0x180
             print "message 0x180: TPDO1 on node %d" % node_id
+            print hexlify(msg.data)
+            # interpret as little endian
+            (lu1,lu2) = struct.unpack('<Hi',msg.data)
+            print "HEX: lu1 = %4.4x lu2 = %8.8x" % (lu1,lu2)
+            print "INT: lu2 = %i" % (lu2)
+
             return
         if ((msg.arbitration_id & ~node_id) == 0x280): # TPDO2
             #node_id = msg.arbitration_id & ~0x280
@@ -56,7 +63,7 @@ class CanopenBus:
             return
         if ((msg.arbitration_id & ~node_id) == 0x380): # TPDO3
             #node_id = msg.arbitration_id & ~0x380
-            print "message 0x380: TPDO3 on node %d" % node_id
+            #print "message 0x380: TPDO3 on node %d" % node_id
             return
         if ((msg.arbitration_id & ~node_id) == 0x480): # TPDO4
             #node_id = msg.arbitration_id & ~0x480
