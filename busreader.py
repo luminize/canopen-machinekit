@@ -5,7 +5,7 @@ import sys
 
 # see http://bioportal.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/select/index.html#poll
 
-from canopen_bus import CanopenBus
+from can_bus import CanBus
 from canopen_device import CanopenDevice
 
 # run poller.py
@@ -27,17 +27,17 @@ buses = dict() # map socket fd's to CanopenBus objects
 
 
 # adapt as needed
-can0 = CanopenBus(ifname="can0")
+can0 = CanBus(ifname="can0")
 buses[can0.fd()] = can0
 
-vcan0 = CanopenBus(ifname="vcan0")
+vcan0 = CanBus(ifname="vcan0")
 buses[vcan0.fd()] = vcan0
 
 poller = select.poll()
 for fd in buses:
     poller.register(fd, select.POLLIN)
 
-# Do not block forever ()
+# Do not block forever
 TIMEOUT = 1000 # milliseconds
 
 try:
@@ -58,10 +58,10 @@ while True:
             if flag == select.POLLIN:
                 canbus = buses[fd]    # map fd->CanopenBus object
                 m = canbus.bus.recv() # call its Bus.recv method
-                canbus.process(m)     # call the message handler
-                                          # in that CanopenBus object
+                canbus.hdlr_process(m)     # call the message handler
+                    # in that CanopenBus object
     else:
         # nothing received
         for fd in buses:
             # call timeout handler on all bus objects
-            buses[fd].timeout()
+            buses[fd].hdlr_timeout()
