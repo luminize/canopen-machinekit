@@ -108,6 +108,9 @@ class CanBus(object):
         s += "interface=%s fd=%d)" % (self.ifname, self.fd)
         return s
 
+    def send_nmt(self, node, nmtcmd):
+        cf = CanFrame(arbitration_id=0, dlc=2, data=bytearray([nmtcmd,node]))
+        cf.write(self.fd)
 
 
 def SDOUploadExp(node,index, subindex):
