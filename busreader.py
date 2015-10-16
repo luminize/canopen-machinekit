@@ -2,11 +2,11 @@
 import select
 import sys
 
+from socketcan import CanBus,CanFrame
+from canopen_device import CanopenDevice
+
 
 # see http://bioportal.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/select/index.html#poll
-
-from can_bus import CanBus
-from canopen_device import CanopenDevice
 
 # run poller.py
 #timeout: vcan0
@@ -26,12 +26,43 @@ from canopen_device import CanopenDevice
 buses = dict() # map socket fd's to CanopenBus objects
 
 
-# adapt as needed
-can0 = CanBus(ifname="can0")
-buses[can0.fd()] = can0
+class CanBusDispatch(CanBus):
+    def __init__(self, *args, **kwargs):
+        super(CanBusDispatch, self).__init__(*args, **kwargs)
+        self.devices = dict()
 
-vcan0 = CanBus(ifname="vcan0")
-buses[vcan0.fd()] = vcan0
+    def broadcast(self,cf):
+        print("%s broadcast: %s" % (self.ifname, cf))
+
+    def dispatch(self, cf):
+        id = cf.arbitration_id & 0x7f
+
+        if id == 0: # broadcast
+            # for addr, dev in self.devices.items():
+            #     dev.process(cf)
+            return
+
+        if not id in self.devices:
+            self.devices[id] = CanopenDevice(id, self)
+        print("%s: %s" % (self.ifname, cf))
+        self.devices[id].process(cf)
+
+    def timer(self):
+        for addr, dev in self.devices.items():
+            dev.timer()
+
+    def add_device(self,node_id, device):
+        self.devices[node_id] = device
+        pass #print("%s: timeout" % (self.ifname))
+
+
+
+# adapt as needed
+can0 = CanBusDispatch(ifname="can0")
+buses[can0.fd] = can0
+
+vcan0 = CanBusDispatch(ifname="vcan0")
+buses[vcan0.fd] = vcan0
 
 poller = select.poll()
 for fd in buses:
@@ -48,7 +79,7 @@ try:
         'vcan0' : vcan0,
     })
 except Exception:
-    print "manhole not installed - run 'sudo pip install manhole'"
+    print("manhole not installed - run 'sudo pip install manhole'")
 
 while True:
     # watches all fd's in poller set
@@ -56,12 +87,14 @@ while True:
     if events:
         for fd, flag in events:
             if flag == select.POLLIN:
-                canbus = buses[fd]    # map fd->CanopenBus object
-                m = canbus.bus.recv() # call its Bus.recv method
-                canbus.hdlr_process(m)     # call the message handler
+                bus = buses[fd]    # map fd->CanBus object
+                cf = CanFrame()
+                cf.read(fd)
+                #m = canbus.bus.recv() # call its Bus.recv method
+                bus.dispatch(cf)     # call the message handler
                     # in that CanopenBus object
     else:
         # nothing received
         for fd in buses:
             # call timeout handler on all bus objects
-            buses[fd].hdlr_timeout()
+            buses[fd].timer()

@@ -1,7 +1,6 @@
 ''' canopen device class '''
-import can
+from socketcan import CanBus,CanFrame,SDODownloadExp
 from candevice import CanDevice
-import canopen_frame
 import time
 
 # NMT states
@@ -95,13 +94,14 @@ canident = {
 class CanopenDevice(CanDevice):
 
 
-    def __init__(self, node_id, parent_bus, timeout=2.0):
+    def __init__(self, node_id, parent_bus, timeout=5.0):
         super(CanopenDevice, self).__init__(node_id, parent_bus)
         self.nmt_state = NMT_UNKNOWN
         self.device_type = None  # at first discovery time not yet known
         self.manufacturer = None # so not a sensible creation-time param
         self.name = name = None  # set those later once discovery works
         self.timeout = timeout
+        self.heartbeating = False
 
         # handler dispatch on can identifier
         self.hdlr = {
@@ -123,52 +123,57 @@ class CanopenDevice(CanDevice):
         }
 
     def hdl_nmt(self,  ident, msg):
-        print "hdl_nmt: msg=", msg
-        print "%d: nmt %s -> %s" % (self.node_id,
+        if  msg.data[1] != self.node_id:
+            return
+        print("%d: nmt: msg=%s" % (self.node_id, msg))
+        print ("%d: nmt %s -> %s" % (self.node_id,
                                     nmt_states[self.nmt_state],
-                                    nmt_states[msg.data[0]])
-
+                                    nmt_states[msg.data[0]]))
         self.nmt_state = msg.data[0]
 
 
     def hdl_heartbeat(self,ident,  msg):
-        print "%d: heartbeat %s -> %s" % (self.node_id,
-                                    nmt_states[self.nmt_state],
-                                    nmt_states[msg.data[0]])
+        print( "%d: heartbeat %s -> %s" % (self.node_id,
+                                           nmt_states[self.nmt_state],
+                                           nmt_states[msg.data[0]]))
         self.nmt_state = msg.data[0]
-        # if self.nmt_state == NMT_BOOTUP:
-        #     m = can.Message(arbitration_id=self.node_id|CO_CAN_ID_RSDO,
-        #                    #  603#22171000f4050000
+        if self.nmt_state == NMT_BOOTUP:
+            time.sleep(1.0)
+            # set heartbeat to 3000mS
+            SDODownloadExp(self.parent_bus.fd, self.node_id, 0x1017, 0, 3000, 2)
+            self.heartbeating = True # start monitoring
 
-        #                     data=bytearray([0x22,0x17, 0x10, 0x00, 0xF4, 0x01, 0, 0]))
-        #     self.parent_bus.bus.send(m)
-
-            
     def hdl_sync(self, ident, msg):
-        pass
-    def hdl_emcy(self, ident, msg):
-        pass
-    def hdl_timestamp(self, ident, msg):
-        pass
-    def hdl_tpdo(self,ident,  msg):
-        pass
-    def hdl_rpdo(self, ident, msg):
-        pass
-    def hdl_tsdo(self,ident,  msg):
-        pass
-    def hdl_rsdo(self,ident,  msg):
-        pass
+        print("sync: msg=", msg)
 
-    def hdlr_process(self, msg):
+    def hdl_emcy(self, ident, msg):
+        print("emcy: msg=", msg)
+
+    def hdl_timestamp(self, ident, msg):
+        print("timestamp: msg=", msg)
+
+    def hdl_tpdo(self,ident,  msg):
+        print("tpdo: msg=", msg)
+
+    def hdl_rpdo(self, ident, msg):
+        print("rpdo: msg=", msg)
+
+    def hdl_tsdo(self,ident,  msg):
+        print("tsdo: msg=", msg)
+
+    def hdl_rsdo(self,ident,  msg):
+        print("rsdo: msg=", msg)
+
+    def process(self, msg):
         self.last_timestamp = msg.timestamp
         node_id = (msg.arbitration_id & 0x7f)
-        ident = (msg.arbitration_id & ~0x7f)
+        ident = (msg.arbitration_id & 0x780)
         self.hdlr[ident](node_id, msg)
 
-    def hdlr_timeout(self):
+    def timer(self):
         if self.nmt_state !=  NMT_UNKNOWN:
-            if time.time() - self.last_timestamp > self.timeout:
-                print "device %d: disappeared" % (self.node_id)
+            if self.heartbeating and time.time() - self.last_timestamp > self.timeout:
+                print("device %d: disappeared" % (self.node_id))
                 self.nmt_state =  NMT_UNKNOWN
             # XXX cause an estop
             return
