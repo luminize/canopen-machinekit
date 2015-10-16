@@ -122,7 +122,7 @@ class CanopenDevice(CanDevice):
             CO_CAN_ID_HEARTBEAT : self.hdl_heartbeat,
         }
 
-    def hdl_nmt(self,  ident, msg):
+    def hdl_nmt(self, ident, msg):
         if  msg.data[1] != self.node_id:
             return
         print("%d: nmt: msg=%s" % (self.node_id, msg))
@@ -132,7 +132,7 @@ class CanopenDevice(CanDevice):
         self.nmt_state = msg.data[0]
 
 
-    def hdl_heartbeat(self,ident,  msg):
+    def hdl_heartbeat(self, ident, msg):
         print( "%d: heartbeat %s -> %s" % (self.node_id,
                                            nmt_states[self.nmt_state],
                                            nmt_states[msg.data[0]]))
