@@ -1,5 +1,6 @@
 ''' canopen device class '''
 from candevice import CanDevice
+import hal
 
 # NMT states
 # http://www.a-m-c.com/download/sw/dw300_3-0-3/CAN_Manual300_3-0-3.pdf p15 4.1
@@ -83,6 +84,12 @@ class CanopenDevice(CanDevice):
         self.device_type = None  # at first discovery time not yet known
         self.manufacturer = None # so not a sensible creation-time param
         self.name = name = None  # set those later once discovery works
+        name = str(self.parent_bus.ifname)+".node"+str(self.node_id)
+        self.h = hal.component(name)
+        print self.h
+        self.h.newpin("tpdo1", hal.HAL_S32, hal.HAL_OUT)
+        print self.h
+#        self.h.ready()
 
     def process(self, msg):
         #print "device %d: msg %s" % (self.node_id, msg)
@@ -109,6 +116,9 @@ class CanopenDevice(CanDevice):
                     self.state = NMT_STOPPED
             else:
                 print "heartbeat with %d bytes, while expectin 1 byte" % msg.dlc
+
+    def set_hal_tpdo1(self, value):
+        self.h['tpdo1'] = value
 
     def readPDOsetup(self):
         # OD means Object Dictionary

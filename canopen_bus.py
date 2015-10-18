@@ -55,6 +55,7 @@ class CanopenBus:
             (lu1,lu2) = struct.unpack('<Hi',msg.data)
             print "HEX: lu1 = %4.4x lu2 = %8.8x" % (lu1,lu2)
             print "INT: lu2 = %i" % (lu2)
+            self.devices[node_id].set_hal_tpdo1(lu2)
 
             return
         if ((msg.arbitration_id & ~node_id) == 0x280): # TPDO2
