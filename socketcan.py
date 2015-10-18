@@ -79,15 +79,49 @@ class CanFrame(object):
 class CanBus(object):
 
     def __init__(self, ifname="can0",loopback=0,recv_own_msgs=0):
-        self.s = socket.socket(socket.AF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
+        '''
+        the values in python3 which we want to use in python2
+
+        >>> import socket
+        import 'types' # <_frozen_importlib.SourceFileLoader object at 0x7f29ad9b7a90>
+        import 'enum' # <_frozen_importlib.SourceFileLoader object at 0x7f29ae072668>
+        import 'socket' # <_frozen_importlib.SourceFileLoader object at 0x7f29ae063470>
+        >>> socket.SOL_CAN_RAW
+        101
+        >>> socket.CAN_RAW_LOOPBACK
+        3
+        >>> socket.AF_CAN
+        <AddressFamily.AF_CAN: 29>
+        >>> socket.CAN_RAW_RECV_OWN_MSGS
+        4
+        >>> socket.CAN_RAW
+        1
+        '''
+        #python2
+        AF_CAN = 29
+        CAN_RAW = 1
+        SOL_CAN_RAW = 101
+        CAN_RAW_LOOPBACK = 3
+        CAN_RAW_RECV_OWN_MSGS = 4
+        self.s = socket.socket(AF_CAN, socket.SOCK_RAW, CAN_RAW)
         self.ifname = ifname
-        self.s.setsockopt(socket.SOL_CAN_RAW,
-                          socket.CAN_RAW_LOOPBACK,
+        self.s.setsockopt(SOL_CAN_RAW,
+                          CAN_RAW_LOOPBACK,
                           loopback)
-        self.s.setsockopt(socket.SOL_CAN_RAW,
-                          socket.CAN_RAW_RECV_OWN_MSGS,
+        self.s.setsockopt(SOL_CAN_RAW,
+                          CAN_RAW_RECV_OWN_MSGS,
                           recv_own_msgs)
         self.s.bind((ifname,))
+        #python3
+        #self.s = socket.socket(socket.AF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
+        #self.ifname = ifname
+        #self.s.setsockopt(socket.SOL_CAN_RAW,
+        #                  socket.CAN_RAW_LOOPBACK,
+        #                  loopback)
+        #self.s.setsockopt(socket.SOL_CAN_RAW,
+        #                  socket.CAN_RAW_RECV_OWN_MSGS,
+        #                  recv_own_msgs)
+        #self.s.bind((ifname,))
 
         #
         #setsockopt(s, SOL_CAN_RAW, CAN_RAW_LOOPBACK, &loopback, sizeof(loopback));
