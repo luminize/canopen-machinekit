@@ -1,6 +1,8 @@
 ''' canopen device class '''
 from socketcan import CanBus,CanFrame,SDODownloadExp
 from candevice import CanDevice
+from binascii import hexlify
+import struct
 import time
 
 # NMT states
@@ -109,7 +111,7 @@ class CanopenDevice(CanDevice):
             CO_CAN_ID_SYNC       : self.hdl_sync,
             CO_CAN_ID_EMERGENCY  : self.hdl_emcy,
             CO_CAN_ID_TIME_STAMP : self.hdl_timestamp,
-            CO_CAN_ID_TPDO_1 : self.hdl_tpdo,
+            CO_CAN_ID_TPDO_1 : self.hdl_tpdo1,
             CO_CAN_ID_RPDO_1 : self.hdl_rpdo,
             CO_CAN_ID_TPDO_2 : self.hdl_tpdo,
             CO_CAN_ID_RPDO_2 : self.hdl_rpdo,
@@ -152,8 +154,22 @@ class CanopenDevice(CanDevice):
     def hdl_timestamp(self, ident, msg):
         print("timestamp: msg=", msg)
 
-    def hdl_tpdo(self,ident,  msg):
+    def hdl_tpdo(self, ident, msg):
         print("tpdo: msg=", msg)
+
+    def hdl_tpdo1(self, ident, msg):
+        print("tpdo: msg=", msg)
+# FIX TO DO !
+# now only parse TPDO1 from node 5 with known arrangement of data (2 + 4 bytes)
+# because other nodes and other TPDOs can be set up differently and will
+# fail with struct.unpack if the size is differently
+        if self.node_id == 5:
+            print("message 0x180: TPDO1 on node %d" % self.node_id)
+            print(hexlify(msg.data))
+            # interpret as little endian
+            (lu1,lu2) = struct.unpack('<Hi',msg.data)
+            print("HEX: lu1 = %4.4x lu2 = %8.8x" % (lu1,lu2))
+            print("INT: lu2 = %i" % (lu2))
 
     def hdl_rpdo(self, ident, msg):
         print("rpdo: msg=", msg)

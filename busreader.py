@@ -5,6 +5,15 @@ import sys
 from socketcan import CanBus,CanFrame
 from canopen_device import CanopenDevice
 
+# setting up can0
+# slcand -f -o -c -s8 /dev/ttyACM0 can0
+# ifconfig can0 up
+
+# setting up vcan0
+# sudo modprobe vcan
+# sudo ip link add dev vcan0 type vcan
+# sudo ip link set up vcan0
+
 
 # see http://bioportal.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/select/index.html#poll
 
