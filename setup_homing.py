@@ -107,66 +107,6 @@ Version 1.2.0 / 02.10.2015 / FIR-v1540
 '''
 
 '''
-#make sure we're in closed loop mode 0x3202 = 1
-#2F = 1 byte
-#2B = 2 byte
-#22 = 4 byte
-data=bytearray([0x22,0x02, 0x32, 0x00, 0x01, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
-#  can0  605   [8]  2F 60 60 00 06 00 00 00
-#  can0  585   [8]  60 60 60 00 00 00 00 00
-
-# method: integer 8, 6098 h = 1
-data=bytearray([0x2F, 0x98, 0x60, 0x00, 0x01, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
-
-# speed search for switch, 6099:01 h = 2
-data=bytearray([0x23, 0x99, 0x60, 0x01, 0x02, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
-
-# speed search for index, 6099:02 h = 1
-data=bytearray([0x23, 0x99, 0x60, 0x02, 0x01, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
-
-#setup for homing mode. Do stupid for now
-data=bytearray([0x2F,0x60, 0x60, 0x00, 0x06, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
-#  can0  605   [8]  2F 60 60 00 06 00 00 00
-#  can0  585   [8]  60 60 60 00 00 00 00 00
-
-#homing is started if but 4 in 6040 is set to 1
-
-#value = canopen.SDODownloadExp(node, 0x6040, 0, 0x06, 2)
-data=bytearray([0x2B,0x40, 0x60, 0x00, 0x06, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
-#  can0  605   [8]  2B 40 60 00 06 00 00 00
-#  can0  585   [8]  60 40 60 00 00 00 00 00
-
-#value = canopen.SDODownloadExp(node, 0x6040, 0, 0x07, 2)
-data=bytearray([0x2B,0x40, 0x60, 0x00, 0x07, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
-#value = canopen.SDODownloadExp(node, 0x6040, 0, 0x07, 2)
-#  can0  605   [8]  2B 40 60 00 07 00 00 00
-#  can0  585   [8]  60 40 60 00 00 00 00 00
-
-#value = canopen.SDOdaDownloadExp(node, 0x6040, 0, 0x0F, 2)
-data=bytearray([0x2B,0x40, 0x60, 0x00, 0x0F, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)can
-time.sleep(0.5)
-#value = canopen.SDODownloadExp(node, 0x6040, 0, 0x0F, 2)
-#  can0  605   [8]  2B 40 60 00 0F 00 00 00
-#  can0  585   [8]  60 40 60 00 00 00 00 00
-
-'''
-
-'''
 cansend can0 602#2202320001000000 set closed loop to '1'
 cansend can0 602#2200180181010000 TPDO1 COB_id
 cansend can0 602#2F001802FF000000 TPDO1 trigger immediate
@@ -224,7 +164,7 @@ send_sdo(data, node)
 time.sleep(0.5)
 
 #cansend can0 602#2210320500000000 3210:07 P current control torque forming comp default 7A120
-data=bytearray([0x22, 0x10, 0x32, 0x07, 0x00, 0x80, 0x07, 0x00 ])
+data=bytearray([0x22, 0x10, 0x32, 0x07, 0x00, 0x40, 0x07, 0x00 ])
 send_sdo(data, node)
 time.sleep(0.5)
 
@@ -253,7 +193,7 @@ time.sleep(0.5)
 
 #cansend can0 602#229A600037894100 10^5 cnts/sec^2 homing acceleration
 #data=bytearray([0x22, 0x9A, 0x60, 0x00, 0x37, 0x89, 0x41, 0x00 ])
-data=bytearray([0x22, 0x9A, 0x60, 0x00, 0x00, 0x01, 0x00, 0x00 ])
+data=bytearray([0x22, 0x9A, 0x60, 0x00, 0x88, 0x00, 0x00, 0x00 ])
 send_sdo(data, node)
 time.sleep(0.5)
 
@@ -273,22 +213,35 @@ time.sleep(0.5)
 
 #invert logic bit 0 by writing '1' to 3240:02
 #cansend can0 602#2240320107000000
-data=bytearray([0x22, 0x40, 0x32, 0x02, 0x01, 0x00, 0x00, 0x00 ])
-send_sdo(data, node)
-time.sleep(0.5)
+#data=bytearray([0x22, 0x40, 0x32, 0x02, 0x01, 0x00, 0x00, 0x00 ])
+#send_sdo(data, node)
+#time.sleep(0.5)
 
 #do input routing
 
 #setup special function enable 3240:01 = 1
 #cansend can0 602#2240320101000000
 
+#enable routing:
+#3240:08 = 1
+#cansend can0 604#2240320801000000
+data=bytearray([0x22, 0x40, 0x32, 0x08, 0x01, 0x00, 0x00, 0x00 ])
+send_sdo(data, node)
+time.sleep(0.5)
+
+#ref switch is bit 2, must be input 4:
+#3242:03=4
+#cansend can0 604#2F42320304000000
+data=bytearray([0x2F, 0x42, 0x32, 0x03, 0x04, 0x00, 0x00, 0x00 ])
+send_sdo(data, node)
+time.sleep(0.5)
 
 #cansend can0 602#2F98600022000000 set homing method 34 (22h)
 #data=bytearray([0x2F, 0x98, 0x60, 0x00, 0x22, 0x00, 0x00, 0x00 ])
 #reference switch method 3 or 4
-#data=bytearray([0x2F, 0x98, 0x60, 0x00, 0x04, 0x00, 0x00, 0x00 ])
+data=bytearray([0x2F, 0x98, 0x60, 0x00, 0x04, 0x00, 0x00, 0x00 ])
 #reference switch method 1 or 2
-data=bytearray([0x2F, 0x98, 0x60, 0x00, 0x01, 0x00, 0x00, 0x00 ])
+#data=bytearray([0x2F, 0x98, 0x60, 0x00, 0x01, 0x00, 0x00, 0x00 ])
 send_sdo(data, node)
 time.sleep(0.5)
 
