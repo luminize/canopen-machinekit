@@ -14,6 +14,19 @@ class CanopenBus:
         if self.bus.socket < 0:
             raise IOError,"could not open %s" % ifname
         self.devices = dict() # node-id -> device object dict
+        self.nmt_states = {
+            'NMT_BOOTUP'  : 0x00,
+            'NMT_PREOP'   : 0x7f,
+            'NMT_OP'      : 0x05,
+            'NMT_STOPPED' : 0x04
+        }
+        self.nmt_messages = {
+            'MSG_NMT_START_REMOTE' : 0x01,
+            'MSG_NMT_STOP_REMOTE'  : 0x02,
+            'MSG_NMT_PRE_OP'       : 0x80,
+            'MSG_NMT_RESET_NODE'   : 0x81,
+            'MSG_NMT_RESET_COM'    : 0x82
+        }
 
     def fd(self):  # return the SocketCAN file descriptor
         return self.bus.socket
@@ -101,18 +114,11 @@ class CanopenBus:
                         dlc=2,data=bytearray([nmtcmd,node_id]))
         self.bus.send(m)
 
-    def send_sdo(self, node_id, register, sub):
+    def send_sdo(self, node_id, message):
         #doesnt work, need to convert register to bytearray yet
         #hardcoded for now
         # https://en.wikipedia.org/wiki/CANopen#Service_Data_Object_.28SDO.29_protocol
 
         m = can.Message(arbitration_id=(0x600+node_id) ,extended_id=False,
-                        dlc=2,data=bytearray([0x40, \
-                                              0x00, \
-                                              0x1A, \
-                                              0x00, \
-                                              0x00, \
-                                              0x00, \
-                                              0x00, \
-                                              0x00 ]))
+                        dlc=2,data=message)
         self.bus.send(m)
